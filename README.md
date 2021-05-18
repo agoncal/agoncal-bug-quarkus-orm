@@ -1,54 +1,33 @@
-# orm Project
+# nullable=false doesn't get mapped in orm.xml
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Problem
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+This example is about mapping a POJO (not an entity) via the `orm.xml` file[1].
+The class `org.agoncal.bug.quarkus.orm.Artist` is just a POJO and cannot get used by the Panache repository `org.agoncal.bug.quarkus.orm.ArtistRepository`. 
+For this to work we need to map it in the `META-INF/orm.xml` file.
+The `ArtistRepositoryTest` checks that the mapping is working (inserting and retrieving data from a PostgreSQL database).
 
-## Running the application in dev mode
+Thanks to the `scripts.generation.create-target` property, you can see the DDL in the file `create.sql`.
+The mapping of the name attribute is:
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-./mvnw compile quarkus:dev
+```xml
+<basic name="name">
+  <column length="100" nullable="false"/>
+</basic>
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+The DDL changes the length but not the nullability
 
-## Packaging and running the application
-
-The application can be packaged using:
-```shell script
-./mvnw package
-```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
-
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
+```shell
+    name         varchar(100),
 ```
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+### Quarkus SNAPSHOT
 
-## Creating a native executable
+To reproduce this bug I am using a SNAPSHOT version of Quarkus.
+You need to set `<quarkus-plugin.version>999-SNAPSHOT</quarkus-plugin.version>` in the `pom.xml`.
 
-You can create a native executable using: 
-```shell script
-./mvnw package -Pnative
-```
+## References
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/orm-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.html.
-
-## Provided Code
-
-### RESTEasy JAX-RS
-
-Easily start your RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
+* [1] https://github.com/quarkusio/quarkus/issues/14762
+* [2] https://github.com/quarkusio/quarkus/issues/14762#issuecomment-843104842
